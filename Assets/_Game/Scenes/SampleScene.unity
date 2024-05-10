@@ -547,10 +547,9 @@ MonoBehaviour:
   WallTile: {fileID: 11400000, guid: b4af53ed566e9ad41ab007a4d59675cd, type: 2}
   FloorTile: {fileID: 11400000, guid: 451eab036fd64ff48bf695e2729dbb52, type: 2}
   RoomMaxHeight: 8
-  RoomMinHeight: 5
+  RoomMinHeight: 4
   RoomMaxWidth: 8
-  RoomMinWidth: 5
-  HallwayWidth: 1
+  RoomMinWidth: 4
   NumberOfRooms: 8
 --- !u!483693784 &1267981584
 TilemapRenderer:

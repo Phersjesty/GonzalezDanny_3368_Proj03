@@ -15,17 +15,15 @@ public class TopDownMapGenerator : MonoBehaviour
 
     [Header("Room Info")]
     [Range(1, 20)]
-    [SerializeField] private int RoomMaxHeight = 4;
+    [SerializeField] private int RoomMaxHeight = 8;
     [Range(1, 20)]
-    [SerializeField] private int RoomMinHeight = 2;
+    [SerializeField] private int RoomMinHeight = 4;
     [Range(1, 20)]
-    [SerializeField] private int RoomMaxWidth = 4;
+    [SerializeField] private int RoomMaxWidth = 8;
     [Range(1, 20)]
-    [SerializeField] private int RoomMinWidth = 2;
-    [Range(1, 3)]
-    [SerializeField] private int HallwayWidth = 1;
+    [SerializeField] private int RoomMinWidth = 4;
     [Space(5)]
-    [SerializeField] private int NumberOfRooms = 8;
+    [SerializeField] private int NumberOfRooms = 10;
 
     private int _roomMaxHeight;
     private int _roomMaxWidth;
@@ -49,9 +47,12 @@ public class TopDownMapGenerator : MonoBehaviour
         _map = GetComponent<Tilemap>();
         _shadowMap = new int[NumberOfRooms, NumberOfRooms];
         _shadowMap[NumberOfRooms / 2, NumberOfRooms / 2] = 1;
+
         GenerateRoom(NumberOfRooms / 2, NumberOfRooms / 2, true);
 
-        traverseMap(NumberOfRooms / 2, NumberOfRooms / 2, NumberOfRooms);
+        TraverseMap(NumberOfRooms / 2, NumberOfRooms / 2, NumberOfRooms);
+      
+        CreateHallways(NumberOfRooms / 2, NumberOfRooms / 2);
     }
 
     void GenerateRoom(int r, int c, bool maxSize = false)
@@ -68,9 +69,9 @@ public class TopDownMapGenerator : MonoBehaviour
         int startX = (r - (NumberOfRooms / 2)) * _roomMaxWidth - (_roomMaxWidth / 2);
         int startY = (c - (NumberOfRooms / 2)) * _roomMaxHeight - (_roomMaxHeight / 2);
 
-        for(int i = 0; i < width; i++)
+        for(int i = 1; i < width-1; i++)
         {
-            for(int j = 0; j < height; j++)
+            for(int j = 1; j < height-1; j++)
             {
                 _map.SetTile(new Vector3Int(startX + i, startY + j), FloorTile);
                 
@@ -82,7 +83,7 @@ public class TopDownMapGenerator : MonoBehaviour
             {
                 if (i == 0 || i == width - 1 || j == 0 || j == height - 1)
                 {
-                    _wallMap.GetComponent<Tilemap>().SetTile(new Vector3Int(startX + i, startY + j), WallTile);
+                    //_wallMap.GetComponent<Tilemap>().SetTile(new Vector3Int(startX + i, startY + j), WallTile);
                     //_map.SetColliderType(new Vector3Int(startX + i, startY + j), Tile.ColliderType.Sprite);
                 }
             }
@@ -90,7 +91,7 @@ public class TopDownMapGenerator : MonoBehaviour
 
     }
 
-    void traverseMap(int r, int c, int roomsLeft)
+    void TraverseMap(int r, int c, int roomsLeft)
     {
         if(roomsLeft <= 0)
         {
@@ -99,10 +100,10 @@ public class TopDownMapGenerator : MonoBehaviour
 
         if(r >= NumberOfRooms || r < 0 || c >= NumberOfRooms || c < 0)
         {
-            if (r < 0) traverseMap(r + 1, c, roomsLeft);
-            if (r > _shadowMap.Length) traverseMap(r - 1, c, roomsLeft);
-            if (c < 0) traverseMap(r, c + 1, roomsLeft);
-            if (c > _shadowMap.Length) traverseMap(r, c - 1, roomsLeft);
+            if (r < 0) TraverseMap(r + 1, c, roomsLeft);
+            if (r > _shadowMap.Length) TraverseMap(r - 1, c, roomsLeft);
+            if (c < 0) TraverseMap(r, c + 1, roomsLeft);
+            if (c > _shadowMap.Length) TraverseMap(r, c - 1, roomsLeft);
             
             return;
         }
@@ -119,20 +120,74 @@ public class TopDownMapGenerator : MonoBehaviour
         switch (random)
         {
             case 1:
-                traverseMap(r + 1, c, roomsLeft);
+                TraverseMap(r + 1, c, roomsLeft);
                 break;
             case 2:
-                traverseMap(r, c + 1, roomsLeft);
+                TraverseMap(r, c + 1, roomsLeft);
                 break;
             case 3:
-                traverseMap(r - 1, c, roomsLeft);
+                TraverseMap(r - 1, c, roomsLeft);
                 break;
             case 4:
-                traverseMap(r, c - 1, roomsLeft);
+                TraverseMap(r, c - 1, roomsLeft);
                 break;
 
         }
 
         return;
+    }
+
+    bool CreateHallways(int r, int c)
+    {
+        if(r >= NumberOfRooms || r < 0 || c >= NumberOfRooms || c < 0 || _shadowMap[r, c] == 0)
+        {
+            return (false);
+        }
+
+        _shadowMap[r, c]--;
+
+        //DrawHallway(r, c, r, c);
+
+      
+        
+        if (CreateHallways(r + 1, c) == true)
+        {
+            DrawHallway(r, c, r + 1, c);
+        }
+        if (CreateHallways(r - 1, c) == true)
+        {
+            DrawHallway(r - 1, c, r, c);
+        }
+        if (CreateHallways(r, c + 1) == true)
+        {
+            DrawHallway(r, c, r, c + 1);
+        }
+        if (CreateHallways(r, c - 1) == true)
+        {
+            DrawHallway(r, c - 1, r, c);
+        }
+        
+        return (true);
+    }
+
+    void DrawHallway(int startR, int startC, int finalR, int finalC)
+    {
+        int startX = (startR - (NumberOfRooms / 2)) * _roomMaxWidth - (_roomMaxWidth / 2) + 1;
+        int startY = (startC - (NumberOfRooms / 2)) * _roomMaxHeight - (_roomMaxHeight / 2) + 1;
+        //_wallMap.GetComponent<Tilemap>().
+        if (startC == finalC)
+        {
+            for (int i = 1; i < _roomMaxWidth; i++)
+            {
+                _map.SetTile(new Vector3Int(startX + i, startY), FloorTile);
+            }
+        }
+        if (startR == finalR)
+        {
+            for (int i = 1; i < _roomMaxHeight; i++)
+            {
+                _map.SetTile(new Vector3Int(startX, startY + i), FloorTile);
+            }
+        }
     }
 }
